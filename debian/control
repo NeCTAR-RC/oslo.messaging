@@ -1,0 +1,41 @@
+Source: oslo.messaging
+Section: python
+Priority: optional
+Maintainer: Chuck Short <zulcss@ubuntu.com>
+Build-Depends: debhelper (>= 8.0.0),
+               python-all (>= 2.6.6-3~),
+               python-babel,
+               python-eventlet,
+               python-fixtures,
+               python-iso8601,
+               python-kombu,
+               python-mock,
+               python-mox3,
+               python-oslotest,
+               python-oslo.config,
+               python-oslosphinx,
+               python-pbr,
+               python-setuptools,
+               python-six,
+               python-sphinx,
+               python-stevedore,
+               python-testscenarios,
+               python-testtools,
+               python-yaml,
+               testrepository
+Standards-Version: 3.9.4
+
+Package: python-oslo.messaging
+Architecture: all
+Depends: python-babel,
+         python-eventlet,
+         python-iso8601,
+         python-oslo.config,
+         python-six,
+         python-stevedore,
+         python-yaml,
+         ${misc:Depends},
+         ${python:Depends}
+Description: oslo messaging library
+ The oslo messaging API supports RPC and notifications over a number of
+ different messaging transports.

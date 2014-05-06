@@ -1,0 +1,40 @@
+oslo.messaging (1.3.0-0ubuntu1) trusty; urgency=medium
+
+  * New upstream release. (LP: #1300804)
+  * debian/patches/skip-qpid-tests.patch: Skip qpid tests if qpid
+    is not installed.
+
+ -- Chuck Short <zulcss@ubuntu.com>  Tue, 01 Apr 2014 10:09:49 -0400
+
+oslo.messaging (1.3.0~a9-0ubuntu1) trusty; urgency=medium
+
+  * New upstream release (LP: #1298970)
+  * debian/control:
+    - Add python-oslotest as a build dependency.
+    - Use python-oslosphinx instead of python-oslo.sphinx
+
+ -- Chuck Short <zulcss@ubuntu.com>  Thu, 27 Mar 2014 13:01:34 -0400
+
+oslo.messaging (1.3.0~a7-0ubuntu1) trusty; urgency=medium
+
+  * New upstream release.
+  * debian/control:
+    - Add python-yaml, python-babel, python-six, python-mox3,
+      python-mock as build dependency.
+    - Dropped python-d2to1 as a dependency.
+  * wrap and sort.
+
+ -- Chuck Short <zulcss@ubuntu.com>  Fri, 07 Feb 2014 14:32:19 -0500
+
+oslo.messaging (1.2.0~a11-0ubuntu1) trusty; urgency=low
+
+  * New upstream release:
+    - debian/watch: Fix typo (LP: #1212684)
+
+ -- Chuck Short <zulcss@ubuntu.com>  Wed, 04 Dec 2013 10:58:43 -0500
+
+oslo.messaging (1.2.0~a4-0ubuntu1) saucy; urgency=low
+
+  * Initial release.
+
+ -- Chuck Short <zulcss@ubuntu.com>  Wed, 14 Aug 2013 14:11:08 -0400
