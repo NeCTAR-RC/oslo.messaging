@@ -83,19 +83,21 @@ class ConnectionPool(pool.Pool):
         # time code, it gets here via cleanup() and only appears in service.py
         # just before doing a sys.exit(), so cleanup() only happens once and
         # the leakage is not a problem.
-        del self.connection_cls.pools[self.url]
+        del self.connection_cls.pools[str(self.url)]
 
 
 _pool_create_sem = threading.Lock()
 
 
 def get_connection_pool(conf, url, connection_cls):
+    # url is a TransportURL object - get the actual URL.
+    pool_key = str(url)
     with _pool_create_sem:
         # Make sure only one thread tries to create the connection pool.
-        if url not in connection_cls.pools:
-            connection_cls.pools[url] = ConnectionPool(conf, url,
-                                                       connection_cls)
-    return connection_cls.pools[url]
+        if pool_key not in connection_cls.pools:
+            connection_cls.pools[pool_key] = ConnectionPool(conf, url,
+                                                            connection_cls)
+    return connection_cls.pools[pool_key]
 
 
 class ConnectionContext(rpc_common.Connection):
