@@ -41,6 +41,7 @@ class TestRabbitDriverLoad(test_utils.BaseTestCase):
 
     def test_driver_load(self):
         transport = messaging.get_transport(self.conf)
+        self.addCleanup(transport.cleanup)
         self.assertIsInstance(transport._driver, rabbit_driver.RabbitDriver)
 
 
