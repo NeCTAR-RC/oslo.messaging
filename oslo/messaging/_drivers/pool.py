@@ -83,6 +83,13 @@ class Pool(object):
                 except IndexError:
                     break
 
+    def filter(self, predicate):
+        with self._cond:
+            for _ in range(len(self._items)):
+                item = self._items.popleft()
+                if predicate(item):
+                    self._items.append(item)
+
     @abc.abstractmethod
     def create(self):
         """Construct a new item."""

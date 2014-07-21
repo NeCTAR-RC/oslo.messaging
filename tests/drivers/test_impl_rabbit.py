@@ -31,6 +31,69 @@ from oslo.serialization import jsonutils
 from tests import utils as test_utils
 
 load_tests = testscenarios.load_tests_apply_scenarios
+ThreadingEvent = getattr(threading, '_Event', threading.Event)
+
+
+class TestHeartbeat(test_utils.BaseTestCase):
+
+    @mock.patch('kombu.connection.Connection.autoretry')
+    @mock.patch('kombu.connection.Connection.heartbeat_check')
+    @mock.patch.object(ThreadingEvent, 'wait')
+    def _do_test_heartbeat_sent(self, wait, fake_heartbeat, fake_autoretry,
+                                heartbeat_side_effect=None):
+
+        def autoretry_callback(*args, **kwargs):
+            return None, mock.Mock()
+
+        fake_autoretry.return_value = autoretry_callback
+        if heartbeat_side_effect:
+            fake_heartbeat.side_effect = heartbeat_side_effect
+
+        transport = messaging.get_transport(self.conf, 'kombu+memory:////')
+        self.addCleanup(transport.cleanup)
+        driver = transport._driver
+
+        # NOTE(sileht): Create two conenction in the pool
+        with driver._get_connection():
+            driver._get_connection()
+
+        # NOTE(sileht): Create the reply connection
+        driver._get_reply_q()
+
+        nt = rabbit_driver.HeartbeatThread(driver)
+        wait.side_effect = lambda *args, **kwargs: nt.stop()
+        nt.run()
+
+        # check heartbeat have been called for each connection
+        self.assertEqual(3, fake_heartbeat.call_count)
+        if not heartbeat_side_effect:
+            # on time per connection
+            self.assertEqual(4, fake_autoretry.call_count)
+            # Number of connection still in the pool
+            self.assertEqual(2, len(driver._connection_pool._items))
+        else:
+            # one more time for the reconnection
+            self.assertEqual(5, fake_autoretry.call_count)
+            # Number of connection still in the pool
+            self.assertEqual(0, len(driver._connection_pool._items))
+
+    def test_test_heartbeat_sent_default(self):
+        self._do_test_heartbeat_sent()
+
+    def test_test_heartbeat_sent_channel_fail(self):
+        self._do_test_heartbeat_sent(
+            heartbeat_side_effect=kombu.exceptions.ChannelError)
+
+    def test_test_heartbeat_sent_connection_fail(self):
+        self._do_test_heartbeat_sent(
+            heartbeat_side_effect=kombu.exceptions.ConnectionError)
+
+    @mock.patch.object(rabbit_driver, 'HeartbeatThread')
+    def test_driver_starts_heartbeating(self, thread):
+        transport = messaging.get_transport(self.conf, 'kombu+memory:////')
+        self.addCleanup(transport.cleanup)
+        thread.assert_called()
+        thread.start.assert_called()
 
 
 class TestRabbitDriverLoad(test_utils.BaseTestCase):
@@ -81,6 +144,9 @@ class TestRabbitTransportURL(test_utils.BaseTestCase):
         self.messaging_conf.transport_driver = 'rabbit'
         self.messaging_conf.in_memory = False
 
+    @mock.patch('oslo.messaging._drivers.impl_rabbit.Connection.ensure')
+    @mock.patch('oslo.messaging._drivers.impl_rabbit.Connection.reset')
+    def test_transport_url(self, fake_ensure, fake_reset):
         transport = messaging.get_transport(self.conf, self.url)
         self.addCleanup(transport.cleanup)
         driver = transport._driver

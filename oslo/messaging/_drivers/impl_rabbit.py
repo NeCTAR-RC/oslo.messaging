@@ -17,13 +17,13 @@ import itertools
 import logging
 import socket
 import ssl
+import threading
 import time
 import uuid
 
 import kombu
 import kombu.connection
 import kombu.entity
-import kombu.exceptions
 import kombu.messaging
 import six
 from six.moves.urllib import parse
@@ -100,11 +100,13 @@ rabbit_opts = [
                 help='Use HA queues in RabbitMQ (x-ha-policy: all). '
                      'If you change this option, you must wipe the '
                      'RabbitMQ database.'),
-
     # FIXME(markmc): this was toplevel in openstack.common.rpc
     cfg.BoolOpt('fake_rabbit',
                 default=False,
                 help='If passed, use a fake RabbitMQ provider.'),
+    cfg.IntOpt('heartbeat_timeout',
+               default=15,
+               help='seconds between rabbit keep-alive heartbeat.'),
 ]
 
 LOG = logging.getLogger(__name__)
@@ -477,14 +479,14 @@ class Connection(object):
         self.channel = None
         self.connection = kombu.connection.Connection(
             self._url, ssl=self._ssl_params, login_method=self._login_method,
-            failover_strategy="shuffle")
+            failover_strategy="shuffle", heartbeat=self.conf.heartbeat_timeout)
 
         LOG.info(_('Connecting to AMQP server on %(hostname)s:%(port)d'),
                  {'hostname': self.connection.hostname,
                   'port': self.connection.port})
+
         # NOTE(sileht): just ensure the connection is setuped at startup
-        self.ensure(error_callback=None,
-                    method=lambda channel: True)
+        self.ensure_connection()
         LOG.info(_('Connected to AMQP server on %(hostname)s:%(port)d'),
                  {'hostname': self.connection.hostname,
                   'port': self.connection.port})
@@ -547,6 +549,10 @@ class Connection(object):
         self.consumer_num = itertools.count(1)
         for consumer in self.consumers:
             consumer.reconnect(new_channel)
+
+    def ensure_connection(self):
+        self.ensure(error_callback=None,
+                    method=lambda channel: True)
 
     def ensure(self, error_callback, method, retry=None,
                timeout_is_error=True):
@@ -667,6 +673,8 @@ class Connection(object):
                     queue.consume(nowait=True)
                 queues_tail.consume(nowait=False)
                 self.do_consume = False
+
+            self.connection.heartbeat_check()
             try:
                 return self.connection.drain_events(timeout=timeout)
             except socket.timeout as exc:
@@ -741,6 +749,83 @@ class Connection(object):
                 return
 
 
+class HeartbeatThread(threading.Thread):
+    def __init__(self, driver):
+        super(HeartbeatThread, self).__init__()
+        self.daemon = True
+        self._exit_event = threading.Event()
+        self._driver = driver
+
+    def run(self):
+        # for Python 2.6 compatibility we cannot use wait() return value
+        while not self._exit_event.is_set():
+            self._do_reply_connection_heartbeat()
+            self._do_pool_connection_heartbeat()
+            # NOTE(sileht): We wait 1 seconds as kombu recommend
+            self._exit_event.wait(timeout=1)
+
+    def _do_pool_connection_heartbeat(self):
+        """Heartbeat inactive connections from connection pool
+        and remove them if they are broken.
+        """
+
+        def _do_heartbeat_and_remove_broken_connection(conn):
+            kombu_connection = conn.connection
+            try:
+                kombu_connection.heartbeat_check()
+                # We need to drain event to receive heartbeat from the broker
+                # but don't hold the connection too much times
+                kombu_connection.drain_events(timeout=0.1)
+                return True
+            except socket.timeout:
+                return True
+            except kombu_connection.recoverable_connection_errors:
+                LOG.info("A recoverable channel errors occurs", exc_info=True)
+            except kombu_connection.recoverable_channel_errors:
+                LOG.info("A recoverable connection errors occurs",
+                         exc_info=True)
+            except Exception:
+                LOG.exception("The heartbeat can't be sent due to an "
+                              "unexpected error.", exc_info=True)
+            return False
+
+        self._driver._connection_pool.filter(
+            _do_heartbeat_and_remove_broken_connection)
+
+    def _do_reply_connection_heartbeat(self):
+        """Maintain inactive connections of the reply connection.
+
+        Assume that maintenance is only needed when connection
+        is inactive (connection events are not drained). Otherwise
+        connection is maintained by polling/consuming code
+        """
+        if (self._driver._waiter
+                and self._driver._waiter.conn_lock.acquire(False)):
+            conn = self._driver._waiter.conn
+            # driver_connection/connection_context/kombu_connection
+            kombu_connection = conn.connection.connection
+            try:
+                kombu_connection.heartbeat_check()
+                # We need to drain event to receive heartbeat from the broker
+                # but don't hold the connection too much times
+                kombu_connection.drain_events(timeout=0.1)
+            except socket.timeout:
+                pass
+            except kombu_connection.recoverable_connection_errors:
+                LOG.info("A recoverable channel errors occurs", exc_info=True)
+                conn.ensure_connection()
+            except kombu_connection.recoverable_channel_errors:
+                LOG.info("A recoverable connection errors occurs",
+                         exc_info=True)
+                conn.ensure_connection()
+            finally:
+                self._driver._waiter.conn_lock.release()
+                self._driver._waiter.waiters.wake_all(None)
+
+    def stop(self):
+        self._exit_event.set()
+
+
 class RabbitDriver(amqpdriver.AMQPDriverBase):
 
     def __init__(self, conf, url,
@@ -756,5 +841,21 @@ class RabbitDriver(amqpdriver.AMQPDriverBase):
                                            default_exchange,
                                            allowed_remote_exmods)
 
+        self._heartbeat_thread = None
+
+        with self._get_connection() as conn:
+            # driver_connection/connection_context/kombu_connection
+            kombu_connection = conn.connection.connection
+            if kombu_connection.supports_heartbeats:
+                self._heartbeat_thread = HeartbeatThread(self)
+                self._heartbeat_thread.start()
+
     def require_features(self, requeue=True):
         pass
+
+    def cleanup(self):
+        if self._heartbeat_thread is not None:
+            self._heartbeat_thread.stop()
+            self._heartbeat_thread.join()
+            self._heartbeat_thread = None
+        super(RabbitDriver, self).cleanup()
