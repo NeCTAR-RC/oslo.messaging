@@ -21,7 +21,7 @@ import contextlib
 import logging
 import sys
 
-from oslo_config import cfg
+from oslo.config import cfg
 
 from oslo_messaging._drivers import impl_zmq
 from oslo_messaging._executors import base  # FIXME(markmc)

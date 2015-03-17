@@ -14,7 +14,7 @@
 #    under the License.
 
 import fixtures
-from oslo_config import cfg
+from oslo.config import cfg
 import six
 from six.moves import mox
 from stevedore import driver

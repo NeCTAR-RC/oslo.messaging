@@ -15,7 +15,7 @@
 
 import sys
 
-from oslo_serialization import jsonutils
+from oslo.serialization import jsonutils
 import six
 import testscenarios
 

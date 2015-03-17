@@ -19,7 +19,7 @@ import os
 import sys
 
 import mock
-from oslo_utils import timeutils
+from oslo.utils import timeutils
 import testscenarios
 import testtools
 
@@ -56,7 +56,7 @@ class TestLogNotifier(test_utils.BaseTestCase):
         # eventlet
         logging.logThreads = 0
 
-    @mock.patch('oslo_utils.timeutils.utcnow')
+    @mock.patch('oslo.utils.timeutils.utcnow')
     def test_logger(self, mock_utcnow):
         with mock.patch('oslo_messaging.transport.get_transport',
                         return_value=test_notifier._FakeTransport(self.conf)):
@@ -99,7 +99,7 @@ class TestLogNotifier(test_utils.BaseTestCase):
 
     @testtools.skipUnless(hasattr(logging.config, 'dictConfig'),
                           "Need logging.config.dictConfig (Python >= 2.7)")
-    @mock.patch('oslo_utils.timeutils.utcnow')
+    @mock.patch('oslo.utils.timeutils.utcnow')
     def test_logging_conf(self, mock_utcnow):
         with mock.patch('oslo_messaging.transport.get_transport',
                         return_value=test_notifier._FakeTransport(self.conf)):

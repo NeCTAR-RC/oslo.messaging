@@ -17,8 +17,8 @@ import testscenarios
 
 from oslo.config import cfg
 from oslo import messaging
-from oslo.messaging import exceptions
-from oslo.messaging import serializer as msg_serializer
+from oslo_messaging import exceptions
+from oslo_messaging import serializer as msg_serializer
 from oslo_messaging.tests import utils as test_utils
 
 load_tests = testscenarios.load_tests_apply_scenarios

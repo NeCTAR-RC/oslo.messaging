@@ -21,7 +21,7 @@ import testscenarios
 
 from oslo.config import cfg
 from oslo import messaging
-from oslo.messaging import transport
+from oslo_messaging import transport
 from oslo_messaging.tests import utils as test_utils
 from oslo_messaging import transport as private_transport
 

@@ -23,8 +23,8 @@ class DeprecationWarningTest(test_base.BaseTestCase):
 
     @mock.patch('warnings.warn')
     def test_warning(self, mock_warn):
-        import oslo.messaging
-        imp.reload(oslo.messaging)
+        import oslo_messaging
+        imp.reload(oslo_messaging)
         self.assertTrue(mock_warn.called)
         args = mock_warn.call_args
         self.assertIn('oslo_messaging', args[0][0])
@@ -35,7 +35,7 @@ class DeprecationWarningTest(test_base.BaseTestCase):
         with warnings.catch_warnings(record=True) as warning_msgs:
             warnings.resetwarnings()
             warnings.simplefilter('always', DeprecationWarning)
-            import oslo.messaging
+            import oslo_messaging
 
             # Use a separate function to get the stack level correct
             # so we know the message points back to this file. This
@@ -52,7 +52,7 @@ class DeprecationWarningTest(test_base.BaseTestCase):
             # run the tests. A simpler test script run outside of
             # testr does correctly report the warnings.
             def foo():
-                oslo.messaging.deprecated()
+                oslo_messaging.deprecated()
 
             foo()
             self.assertEqual(1, len(warning_msgs))

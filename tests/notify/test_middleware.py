@@ -18,7 +18,7 @@ import uuid
 import mock
 import webob
 
-from oslo.messaging.notify import middleware
+from oslo_messaging.notify import middleware
 from oslo_messaging.tests import utils
 
 

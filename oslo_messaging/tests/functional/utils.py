@@ -17,7 +17,7 @@ import time
 import uuid
 
 import fixtures
-from oslo_config import cfg
+from oslo.config import cfg
 from six import moves
 
 import oslo_messaging

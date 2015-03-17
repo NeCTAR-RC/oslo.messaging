@@ -16,7 +16,7 @@
 import itertools
 
 import mock
-from oslo_utils import timeutils
+from oslo.utils import timeutils
 import testscenarios
 
 import oslo_messaging

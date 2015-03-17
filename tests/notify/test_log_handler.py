@@ -15,7 +15,7 @@ import logging
 import mock
 
 from oslo import messaging
-from oslo.messaging.notify import log_handler
+from oslo_messaging.notify import log_handler
 from oslo_messaging.tests.notify import test_notifier
 from oslo_messaging.tests import utils as test_utils
 

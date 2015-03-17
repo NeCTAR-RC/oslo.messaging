@@ -20,7 +20,7 @@ import sys
 import threading
 
 from concurrent import futures
-from oslo_utils import excutils
+from oslo.utils import excutils
 import six
 
 from oslo_messaging._executors import base

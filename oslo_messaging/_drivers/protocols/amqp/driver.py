@@ -25,7 +25,7 @@ import os
 import threading
 import time
 
-from oslo_serialization import jsonutils
+from oslo.serialization import jsonutils
 import proton
 from six import moves
 

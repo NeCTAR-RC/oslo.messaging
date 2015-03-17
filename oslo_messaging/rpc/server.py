@@ -42,7 +42,7 @@ complete.
 
 A simple example of an RPC server with multiple endpoints might be::
 
-    from oslo_config import cfg
+    from oslo.config import cfg
     import oslo_messaging
 
     class ServerControlEndpoint(object):

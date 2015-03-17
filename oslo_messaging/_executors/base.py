@@ -14,7 +14,7 @@
 
 import abc
 
-from oslo_config import cfg
+from oslo.config import cfg
 import six
 
 _pool_opts = [

@@ -21,8 +21,8 @@ import os.path
 import sys
 import traceback as tb
 
-from oslo_config import cfg
-from oslo_middleware import base
+from oslo.config import cfg
+from oslo.middleware import base
 import six
 import webob.dec
 

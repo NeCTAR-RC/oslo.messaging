@@ -29,7 +29,7 @@ import logging
 import threading
 import uuid
 
-from oslo_config import cfg
+from oslo.config import cfg
 import proton
 import pyngus
 from six import moves

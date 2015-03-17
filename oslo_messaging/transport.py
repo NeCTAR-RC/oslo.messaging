@@ -27,7 +27,7 @@ __all__ = [
     'set_transport_defaults',
 ]
 
-from oslo_config import cfg
+from oslo.config import cfg
 import six
 from six.moves.urllib import parse
 from stevedore import driver

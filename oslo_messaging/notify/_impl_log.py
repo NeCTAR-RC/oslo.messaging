@@ -17,7 +17,7 @@
 
 import logging
 
-from oslo_serialization import jsonutils
+from oslo.serialization import jsonutils
 
 from oslo_messaging.notify import notifier
 

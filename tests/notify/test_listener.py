@@ -21,7 +21,7 @@ import testscenarios
 
 from oslo.config import cfg
 from oslo import messaging
-from oslo.messaging.notify import dispatcher
+from oslo_messaging.notify import dispatcher
 from oslo_messaging.tests import utils as test_utils
 
 load_tests = testscenarios.load_tests_apply_scenarios

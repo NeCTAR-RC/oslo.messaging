@@ -18,7 +18,7 @@ import socket
 
 import fixtures
 import mock
-from oslo_utils import importutils
+from oslo.utils import importutils
 import testtools
 
 try:

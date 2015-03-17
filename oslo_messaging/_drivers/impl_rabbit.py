@@ -26,8 +26,8 @@ import kombu.connection
 import kombu.entity
 import kombu.exceptions
 import kombu.messaging
-from oslo_config import cfg
-from oslo_utils import netutils
+from oslo.config import cfg
+from oslo.utils import netutils
 import six
 from six.moves.urllib import parse
 

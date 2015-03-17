@@ -12,7 +12,7 @@
 
 import logging
 
-from oslo_config import cfg
+from oslo.config import cfg
 
 
 class LoggingErrorNotificationHandler(logging.Handler):

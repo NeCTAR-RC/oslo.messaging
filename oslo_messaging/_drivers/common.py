@@ -21,7 +21,7 @@ import sys
 import time
 import traceback
 
-from oslo_serialization import jsonutils
+from oslo.serialization import jsonutils
 import six
 
 import oslo_messaging
