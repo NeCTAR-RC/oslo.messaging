@@ -11,3 +11,7 @@ exclude .gitignore
 exclude .gitreview
 
 global-exclude *.pyc
+
+recursive-include oslo *
+recursive-include oslo_messaging *
+recursive-include oslo.messaging *
