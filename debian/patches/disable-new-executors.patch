@@ -1,0 +1,14 @@
+Description: Disable hard requirement for trollius and aioeventlet
+Author: James Page <james.page@ubuntu.com>
+Forwarded: not-needed
+
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -29,7 +29,3 @@ oslo.middleware>=0.3.0
+ 
+ # for the futures based executor
+ futures>=2.1.6
+-
+-# needed by the aioeventlet executor
+-aioeventlet>=0.4
+-trollius>=1.0

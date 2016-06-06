@@ -1,0 +1,18 @@
+#!/usr/bin/make -f
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+export OSLO_PACKAGE_VERSION=$(shell dpkg-parsechangelog | sed -n -e 's/^Version: //p')
+
+%:
+	dh $@  --with python2,systemd
+
+override_dh_auto_test:
+ifeq (,$(findstring nocheck, $(DEB_BUILD_OPTIONS)))
+	set -e && \
+        TEMP_REZ=`mktemp -t` && \
+        PYTHONPATH=. python setup.py testr --slowest --testr-args='--subunit  ' | tee $$TEMP_REZ | subunit2pyunit; \
+        cat $$TEMP_REZ | subunit-filter -s --no-passthrough | subunit-stats; \
+        rm -f $$TEMP_REZ ;
+endif
+

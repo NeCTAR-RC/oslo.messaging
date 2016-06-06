@@ -1,0 +1,4 @@
+version=3
+opts="uversionmangle=s/([a-zA-Z])/~$1/;s/%7E/~/" \
+ http://tarballs.openstack.org/oslo.messaging/oslo.messaging-(.*)\.tar\.gz
+
