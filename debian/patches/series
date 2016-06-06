@@ -1,7 +1,2 @@
 # Patch for vivid - drop once aioeventlet and trollius in main
 disable-new-executors.patch
-# ZMQ patches
-zmq-client-pooling.patch
-# Stable Updates
-redeclare-consumers-when-ack-requeue-fails.patch
-dont-hold-connection-when-reply-fail.patch
