@@ -28,6 +28,7 @@ __all__ = [
     'RemoteError',
     'UnsupportedVersion',
     'expected_exceptions',
+    'get_rpc_transport',
     'get_rpc_server',
     'expose'
 ]
@@ -35,3 +36,4 @@ __all__ = [
 from .client import *
 from .dispatcher import *
 from .server import *
+from .transport import *

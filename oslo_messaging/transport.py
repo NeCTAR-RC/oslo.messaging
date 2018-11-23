@@ -145,6 +145,29 @@ class DriverLoadFailure(exceptions.MessagingException):
         self.ex = ex
 
 
+def _get_transport(conf, url=None, allowed_remote_exmods=None, aliases=None):
+    allowed_remote_exmods = allowed_remote_exmods or []
+    conf.register_opts(_transport_opts)
+
+    if not isinstance(url, TransportURL):
+        url = TransportURL.parse(conf, url, aliases)
+
+    kwargs = dict(default_exchange=conf.control_exchange,
+                  allowed_remote_exmods=allowed_remote_exmods)
+
+    try:
+        mgr = driver.DriverManager('oslo.messaging.drivers',
+                                   url.transport.split('+')[0],
+                                   invoke_on_load=True,
+                                   invoke_args=[conf, url],
+                                   invoke_kwds=kwargs)
+    except RuntimeError as ex:
+        raise DriverLoadFailure(url.transport, ex)
+
+    return Transport(mgr.driver)
+
+        
+
 def get_transport(conf, url=None, allowed_remote_exmods=None, aliases=None):
     """A factory method for Transport objects.
 
