@@ -27,7 +27,7 @@ import threading
 import time
 import uuid
 
-from amqp import exceptions as amqp_exec
+from amqp import exceptions as amqp_ex
 import kombu
 import kombu.connection
 import kombu.entity
@@ -408,6 +408,14 @@ class Consumer(object):
                           'Queue: [%(queue)s], '
                           'error message: [%(err_str)s]', info)
                 time.sleep(interval)
+                if self.queue_arguments.get('x-queue-type') == 'quorum':
+                    # Before re-declare queue, try to delete it
+                    # This is helping with issue #2028384
+                    # NOTE(amorin) we need to make sure the connection is
+                    # established again, because when an error occur, the
+                    # connection is closed.
+                    conn.ensure_connection()
+                    self.queue.delete()
                 self.queue.declare()
             else:
                 raise
@@ -448,6 +456,24 @@ class Consumer(object):
                 self.queue.consume(callback=self._callback,
                                    consumer_tag=six.text_type(tag),
                                    nowait=self.nowait)
+            else:
+                raise
+        except amqp_ex.InternalError as exc:
+            if self.queue_arguments.get('x-queue-type') == 'quorum':
+                # Before re-consume queue, try to delete it
+                # This is helping with issue #2028384
+                if exc.code == 541:
+                    LOG.warning('Queue %s seems broken, will try delete it '
+                                'before starting over.', self.queue.name)
+                    # NOTE(amorin) we need to make sure the connection is
+                    # established again, because when an error occur, the
+                    # connection is closed.
+                    conn.ensure_connection()
+                    self.queue.delete()
+                    self.declare(conn)
+                    self.queue.consume(callback=self._callback,
+                                       consumer_tag=str(tag),
+                                       nowait=self.nowait)
             else:
                 raise
 
@@ -1138,7 +1164,7 @@ class Connection(object):
                             ConnectRefuseError,
                             OSError,
                             kombu.exceptions.OperationalError,
-                            amqp_exec.ConnectionForced) as exc:
+                            amqp_ex.ConnectionForced) as exc:
                         LOG.info("A recoverable connection/channel error "
                                  "occurred, trying to reconnect: %s", exc)
                         self.ensure_connection()
