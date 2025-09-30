@@ -351,7 +351,6 @@ class Consumer(object):
         self.callback = callback
         self.type = type
         self.nowait = nowait
-        rabbit_quorum_queue_config = rabbit_quorum_queue_config or {}
         self.queue_arguments = _get_queue_arguments(
             rabbit_ha_queues, rabbit_queue_ttl, rabbit_quorum_queue,
             rabbit_quorum_queue_config)
