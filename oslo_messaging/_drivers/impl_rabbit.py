@@ -1305,7 +1305,7 @@ class Connection(object):
             queue_name=topic,
             routing_key='',
             type='direct',
-            durable=False,
+            durable=self.rabbit_transient_quorum_queue,
             exchange_auto_delete=False,
             queue_auto_delete=False,
             callback=callback,
